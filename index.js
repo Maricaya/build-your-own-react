@@ -1,5 +1,5 @@
 // React
-import "./createElement.js"
+import "./my_react.js"
 // element -> react element
 const element = {
   type: "h1",

@@ -24,7 +24,7 @@
 
 const TEXT_ELEMENT = "TEXT_ELEMENT"
 
-function createElement(type, props, ...children) {
+function my_react(type, props, ...children) {
   return {
     type,
     props: {
@@ -70,17 +70,47 @@ function render(element, container) {
   container.appendChild(dom)
 }
 
+// here is a problem with this recursive call
+/*
+* Once we start rendering,
+*  we won’t stop until we have rendered the complete element tree.
+*  If the element tree is big, it may block the main thread for too long.
+*  And if the browser needs to do high priority stuff
+* like handling user input or keeping an animation smooth,
+*  it will have to wait until the render finishes.
+* */
+/*
+* So we are going to break the work into small units,
+*  and after we finish each unit we’ll let the browser interrupt the rendering
+*  if there’s anything else that needs to be done.
+*
+* */
+
+/*
+* requestIdleCallback to make a loop
+* */
+let nextUnitOfWork = null
+
+function workLoop(deadline) {
+  let shouldYield = false
+  while (nextUnitOfWork && !shouldYield) {
+    nextUnitOfWork = performUnitOfWork(nextUnitOfUnit)
+    shouldYield = deadline.timeRemaining() < 1
+  }
+  requestIdleCallback(workLoop)
+}
+
+requestIdleCallback(workLoop)
+
+function performUnitOfWork(nextUnitOfWork) {
+//   todo
+}
+
+
 const Phoebe = {
-  createElement,
+  createElement: my_react,
   render
 };
-
-// const element = Phoebe.createElement(
-//   'div',
-//   { id: 'foo' },
-//   Phoebe.createElement('a', null, 'bar'),
-//   Phoebe.createElement('b')
-// );
 
 /*
 * https://esbuild.github.io/content-types/#jsx
@@ -93,6 +123,13 @@ const element = (
     <b/>
   </div>
 );
+
+// const element = Phoebe.createElement(
+//   'div',
+//   { id: 'foo' },
+//   Phoebe.createElement('a', null, 'bar'),
+//   Phoebe.createElement('b')
+// );
 
 const container = document.getElementById('app');
 

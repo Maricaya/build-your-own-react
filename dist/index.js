@@ -1,7 +1,7 @@
 (() => {
-  // createElement.js
+  // my_react.js
   var TEXT_ELEMENT = "TEXT_ELEMENT";
-  function createElement(type, props, ...children) {
+  function my_react(type, props, ...children) {
     return {
       type,
       props: {
@@ -28,8 +28,20 @@
     element3.props.children.forEach((child) => render(child, dom));
     container3.appendChild(dom);
   }
+  var nextUnitOfWork = null;
+  function workLoop(deadline) {
+    let shouldYield = false;
+    while (nextUnitOfWork && !shouldYield) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfUnit);
+      shouldYield = deadline.timeRemaining() < 1;
+    }
+    requestIdleCallback(workLoop);
+  }
+  requestIdleCallback(workLoop);
+  function performUnitOfWork(nextUnitOfWork2) {
+  }
   var Phoebe = {
-    createElement,
+    createElement: my_react,
     render
   };
   var element = /* @__PURE__ */ Phoebe.createElement("div", {

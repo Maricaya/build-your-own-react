@@ -1,0 +1,33 @@
+{
+  "name": "js",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "browser-env": "^3.3.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^2.60.2"
+  },
+  "scripts": {
+    "build:module": "rollup src/didact.js -f es -n didact -o dist/didact.es.js",
+    "build:main": "rollup src/didact.js -f umd -n didact -o dist/didact.umd.js",
+    "build": "run-p build:module build:main",
+    "prepublishOnly": "npm run build"
+  },
+  "babel": {
+    "plugins": [["transform-react-jsx", {}]],
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ]
+  }
+}

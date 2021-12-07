@@ -47,28 +47,30 @@ function createTextElement(text) {
   };
 }
 
-function render(element, container) {
+function createDom(fiber) {
   // create dom nodes
-  const dom = element.type === TEXT_ELEMENT
+  const dom = fiber.type === TEXT_ELEMENT
     ? document.createTextNode("")
-    : document.createElement(element.type);
+    : document.createElement(fiber.type);
 
   const isProperty = key => key !== "children"
 
   // assign element props to the node
-  Object.keys(element.props)
+  Object.keys(fiber.props)
     .filter(isProperty)
     .forEach(name => {
-      dom[name] = element.props[name]
+      dom[name] = fiber.props[name]
     })
 
   //recursively do the same for each child.
-  element.props.children.forEach(child =>
+  fiber.props.children.forEach(child =>
     render(child, dom)
   )
 
-  container.appendChild(dom)
+  // container.appendChild(dom)
+  return dom
 }
+
 
 // here is a problem with this recursive call
 /*
@@ -89,21 +91,118 @@ function render(element, container) {
 /*
 * requestIdleCallback to make a loop
 * */
+
+function commitRoot() {
+  // add nodes to dom
+  commitWork(wipRoot.children)
+}
+/*
+* And once we finish all the work
+*  (we know it because there isn’t a next unit of work)
+*  we commit the whole fiber tree to the DOM.
+* */
+function commitWork(fiber) {
+  if (!fiber) {
+    return
+  }
+  const domParent = fiber.parent.dom
+  domParent.appendChild(fiber.dom)
+  commitWork(fiber.child)
+  commitWork(fiber.sibling)
+}
+
+function render(element, container) {
+  // set next unit of work
+  wipRoot = {
+    dom: container,
+    props: {
+      children: [element]
+    }
+  }
+  nextUnitOfWork = wipRoot
+}
+
 let nextUnitOfWork = null
+let wipRoot = null // work in progress root
 
 function workLoop(deadline) {
   let shouldYield = false
   while (nextUnitOfWork && !shouldYield) {
-    nextUnitOfWork = performUnitOfWork(nextUnitOfUnit)
+    nextUnitOfWork = performUnitOfWork(nextUnitOfWork)
     shouldYield = deadline.timeRemaining() < 1
   }
-  requestIdleCallback(workLoop)
+  console.log(111)
+
+  if (!nextUnitOfWork && wipRoot) {
+    commitRoot()
+  }
+
+  window.requestIdleCallback(workLoop)
 }
 
-requestIdleCallback(workLoop)
+// https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestIdleCallback
+window.requestIdleCallback(workLoop)
 
-function performUnitOfWork(nextUnitOfWork) {
-//   todo
+/*
+* fiber tree
+  1. add the element to the DOM
+  2. create the fibers for the element’s children
+  3. select the next unit of work
+  * child
+  * sibling
+  * uncle
+  * root -> end
+*
+* */
+
+function performUnitOfWork(fiber) {
+  //  add dom node
+  if (!fiber.dom) {
+    fiber.dom = createDom(fiber)
+  }
+
+  // if (fiber.parent) {
+  //   fiber.parent.dom.appendChild(fiber.dom)
+  // }
+
+  // create new fibers
+  const elements = fiber.props.children
+  let index = 0
+  let prevSibling = null
+
+  while (index < elements.length) {
+    const element = elements[index]
+
+    const newFiber = {
+      type: element.type,
+      props: element.props,
+      parent: fiber,
+      dom: null
+    }
+    // And we add it to the fiber tree
+    // setting it either as a child or as a sibling,
+    // depending on whether it’s the first child or not.
+    if (index === 0) {
+      fiber.child = newFiber
+    } else {
+      prevSibling.sibling = newFiber
+    }
+
+    prevSibling = newFiber
+    index++
+  }
+  //  return next unit of work
+  if (fiber.child) {
+    return fiber.child
+  }
+  let nextFiber = fiber
+  while (nextFiber) {
+    if (nextFiber) {
+      return nextFiber.sibling
+    }
+    nextFiber = nextFiber.parent
+  }
+
 }
 
 

@@ -19,26 +19,84 @@
       }
     };
   }
-  function render(element3, container3) {
-    const dom = element3.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element3.type);
+  function createDom(fiber) {
+    const dom = fiber.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(fiber.type);
     const isProperty = (key) => key !== "children";
-    Object.keys(element3.props).filter(isProperty).forEach((name) => {
-      dom[name] = element3.props[name];
+    Object.keys(fiber.props).filter(isProperty).forEach((name) => {
+      dom[name] = fiber.props[name];
     });
-    element3.props.children.forEach((child) => render(child, dom));
-    container3.appendChild(dom);
+    fiber.props.children.forEach((child) => render(child, dom));
+    return dom;
+  }
+  function commitRoot() {
+    commitWork(wipRoot.children);
+  }
+  function commitWork(fiber) {
+    if (!fiber) {
+      return;
+    }
+    const domParent = fiber.parent.dom;
+    domParent.appendChild(fiber.dom);
+    commitWork(fiber.child);
+    commitWork(fiber.sibling);
+  }
+  function render(element3, container3) {
+    wipRoot = {
+      dom: container3,
+      props: {
+        children: [element3]
+      }
+    };
+    nextUnitOfWork = wipRoot;
   }
   var nextUnitOfWork = null;
+  var wipRoot = null;
   function workLoop(deadline) {
     let shouldYield = false;
     while (nextUnitOfWork && !shouldYield) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfUnit);
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       shouldYield = deadline.timeRemaining() < 1;
     }
-    requestIdleCallback(workLoop);
+    console.log(111);
+    if (!nextUnitOfWork && wipRoot) {
+      commitRoot();
+    }
+    window.requestIdleCallback(workLoop);
   }
-  requestIdleCallback(workLoop);
-  function performUnitOfWork(nextUnitOfWork2) {
+  window.requestIdleCallback(workLoop);
+  function performUnitOfWork(fiber) {
+    if (!fiber.dom) {
+      fiber.dom = createDom(fiber);
+    }
+    const elements = fiber.props.children;
+    let index = 0;
+    let prevSibling = null;
+    while (index < elements.length) {
+      const element3 = elements[index];
+      const newFiber = {
+        type: element3.type,
+        props: element3.props,
+        parent: fiber,
+        dom: null
+      };
+      if (index === 0) {
+        fiber.child = newFiber;
+      } else {
+        prevSibling.sibling = newFiber;
+      }
+      prevSibling = newFiber;
+      index++;
+    }
+    if (fiber.child) {
+      return fiber.child;
+    }
+    let nextFiber = fiber;
+    while (nextFiber) {
+      if (nextFiber) {
+        return nextFiber.sibling;
+      }
+      nextFiber = nextFiber.parent;
+    }
   }
   var Phoebe = {
     createElement: my_react,

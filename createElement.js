@@ -1,7 +1,7 @@
 // as we can see in previous step
 // The only thing that our function needs to do is create that object
 /**
-const element = {
+ const element = {
   type: "h1",
   props: {
     title: "foo",
@@ -22,6 +22,8 @@ const element = {
  *
  */
 
+const TEXT_ELEMENT = "TEXT_ELEMENT"
+
 function createElement(type, props, ...children) {
   return {
     type,
@@ -37,7 +39,7 @@ function createElement(type, props, ...children) {
 
 function createTextElement(text) {
   return {
-    type: 'TEXT_ELEMENT',
+    type: TEXT_ELEMENT,
     props: {
       nodeValue: text,
       children: [],
@@ -45,8 +47,32 @@ function createTextElement(text) {
   };
 }
 
+function render(element, container) {
+  // create dom nodes
+  const dom = element.type === TEXT_ELEMENT
+    ? document.createTextNode("")
+    : document.createElement(element.type);
+
+  const isProperty = key => key !== "children"
+
+  // assign element props to the node
+  Object.keys(element.props)
+    .filter(isProperty)
+    .forEach(name => {
+      dom[name] = element.props[name]
+    })
+
+  //recursively do the same for each child.
+  element.props.children.forEach(child =>
+    render(child, dom)
+  )
+
+  container.appendChild(dom)
+}
+
 const Phoebe = {
   createElement,
+  render
 };
 
 // const element = Phoebe.createElement(
@@ -57,19 +83,19 @@ const Phoebe = {
 // );
 
 /*
-* https://blog.r0b.io/post/using-jsx-without-react/
+* https://esbuild.github.io/content-types/#jsx
 * */
 
 /** @jsx Phoebe.createElement **/
 const element = (
   <div id="foo">
-    <a>bar</a>
-    <b />
+    <a>bar111</a>
+    <b/>
   </div>
 );
 
-// const container = document.getElementById('id');
+const container = document.getElementById('app');
 
 console.log(element)
 
-// ReactDOM.render(element, container);
+Phoebe.render(element, container);

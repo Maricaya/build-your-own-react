@@ -1,5 +1,6 @@
 (() => {
   // createElement.js
+  var TEXT_ELEMENT = "TEXT_ELEMENT";
   function createElement(type, props, ...children) {
     return {
       type,
@@ -11,20 +12,32 @@
   }
   function createTextElement(text2) {
     return {
-      type: "TEXT_ELEMENT",
+      type: TEXT_ELEMENT,
       props: {
         nodeValue: text2,
         children: []
       }
     };
   }
+  function render(element3, container3) {
+    const dom = element3.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element3.type);
+    const isProperty = (key) => key !== "children";
+    Object.keys(element3.props).filter(isProperty).forEach((name) => {
+      dom[name] = element3.props[name];
+    });
+    element3.props.children.forEach((child) => render(child, dom));
+    container3.appendChild(dom);
+  }
   var Phoebe = {
-    createElement
+    createElement,
+    render
   };
   var element = /* @__PURE__ */ Phoebe.createElement("div", {
     id: "foo"
-  }, /* @__PURE__ */ Phoebe.createElement("a", null, "bar"), /* @__PURE__ */ Phoebe.createElement("b", null));
+  }, /* @__PURE__ */ Phoebe.createElement("a", null, "bar111"), /* @__PURE__ */ Phoebe.createElement("b", null));
+  var container = document.getElementById("app");
   console.log(element);
+  Phoebe.render(element, container);
 
   // index.js
   var element2 = {
@@ -34,11 +47,11 @@
       children: "Hello"
     }
   };
-  var container = document.getElementById("app");
+  var container2 = document.getElementById("app");
   var node = document.createElement(element2.type);
   node["title"] = element2.props.title;
   var text = document.createTextNode("");
   text["nodeValue"] = element2.props.children;
   node.appendChild(text);
-  container.appendChild(node);
+  container2.appendChild(node);
 })();

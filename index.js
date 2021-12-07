@@ -8,7 +8,7 @@ const element = {
     children: "Hello",
   },
 }
-​
+
 const container = document.getElementById("app");
 
 // node 

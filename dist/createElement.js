@@ -1,5 +1,6 @@
 // as we can see in previous step
 // The only thing that our function needs to do is create that object
+
 /**
 const element = {
   type: "h1",
@@ -21,17 +22,13 @@ const element = {
  * }
  *
  */
-
 function createElement(type, props, ...children) {
   return {
     type,
-    props: {
-      ...props,
+    props: { ...props,
       // warp primitive value, for example ‘string’
-      children: children.map((child) =>
-        typeof child === 'object' ? child : createTextElement(child)
-      ),
-    },
+      children: children.map(child => typeof child === 'object' ? child : createTextElement(child))
+    }
   };
 }
 
@@ -40,16 +37,14 @@ function createTextElement(text) {
     type: 'TEXT_ELEMENT',
     props: {
       nodeValue: text,
-      children: [],
-    },
+      children: []
+    }
   };
 }
 
 const Phoebe = {
-  createElement,
-};
-
-// const element = Phoebe.createElement(
+  createElement
+}; // const element = Phoebe.createElement(
 //   'div',
 //   { id: 'foo' },
 //   Phoebe.createElement('a', null, 'bar'),
@@ -61,15 +56,9 @@ const Phoebe = {
 * */
 
 /** @jsx Phoebe.createElement **/
-const element = (
-  <div id="foo">
-    <a>bar</a>
-    <b />
-  </div>
-);
 
-// const container = document.getElementById('id');
+const element = Phoebe.createElement("div", {
+  id: "foo"
+}, Phoebe.createElement("a", null, "bar"), Phoebe.createElement("b", null)); // const container = document.getElementById('id');
 
-console.log(element)
-
-// ReactDOM.render(element, container);
+console.log(element); // ReactDOM.render(element, container);
